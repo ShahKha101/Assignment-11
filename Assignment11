@@ -1,0 +1,120 @@
+import java.util.ArrayList;
+
+public class HuffmanEncodingWithHeap {
+
+    // Constants
+    private static final int ASCII8 = 256; // Total ASCII characters
+    private static final char LEFT = '0'; // Code for left traversal
+    private static final char RIGHT = '1'; // Code for right traversal
+    private static final String EMPTY = ""; // Empty string for encoding initialization
+
+    /**
+     * Counts the frequency of each character in the input string.
+     *
+     * @param message Input string to analyze.
+     * @return Array of frequencies for each ASCII character.
+     */
+    public static int[] countFrequency(String message) {
+        int[] frequencies = new int[ASCII8];
+        if (message != null) {
+            // Increment frequency for each character in the message
+            for (int i = 0; i < message.length(); i++) {
+                frequencies[message.charAt(i)]++;
+            }
+        }
+        return frequencies;
+    }
+
+    /**
+     * Builds a MinHeap of Huffman nodes based on character frequencies.
+     *
+     * @param frequencies Array of character frequencies.
+     * @return MinHeap containing HuffmanNodes.
+     */
+    public static MinHeap<HuffmanNode> buildForest(int[] frequencies) {
+        MinHeap<HuffmanNode> forest = new MinHeap<>();
+        for (int asciiCode = 0; asciiCode < frequencies.length; asciiCode++) {
+            if (frequencies[asciiCode] > 0) {
+                // Add a new HuffmanNode for each character with a frequency > 0
+                forest.insert(new HuffmanNode((char) asciiCode, frequencies[asciiCode]));
+            }
+        }
+        return forest;
+    }
+
+    /**
+     * Builds the Huffman tree from the MinHeap.
+     *
+     * @param forest MinHeap of HuffmanNodes.
+     * @return Root of the Huffman tree.
+     */
+    public static HuffmanNode buildTree(MinHeap<HuffmanNode> forest) {
+        while (forest.size() > 1) {
+            // Extract two nodes with smallest frequencies
+            HuffmanNode t1 = forest.removeMin();
+            HuffmanNode t2 = forest.removeMin();
+
+            // Combine nodes into a new parent node
+            HuffmanNode combined = new HuffmanNode(t1.getFrequency() + t2.getFrequency());
+            combined.setLeft(t1);
+            combined.setRight(t2);
+
+            // Add the parent node back to the MinHeap
+            forest.insert(combined);
+        }
+        // The last node in the MinHeap is the root of the tree
+        return forest.removeMin();
+    }
+
+    /**
+     * Recursively creates an encoding table by traversing the Huffman tree.
+     *
+     * @param node  Current node in the tree.
+     * @param code  Current encoding string.
+     * @param codes Encoding table being constructed.
+     */
+    public static void createEncodingTable(HuffmanNode node, String code, String[] codes) {
+        if (node != null) {
+            if (node.getSymbol() != 0) {
+                // Leaf node: store the encoding for this character
+                codes[node.getSymbol()] = code;
+            } else {
+                // Traverse left and right subtrees with updated codes
+                createEncodingTable(node.getLeft(), code + LEFT, codes);
+                createEncodingTable(node.getRight(), code + RIGHT, codes);
+            }
+        }
+    }
+
+    /**
+     * Launches the recursive creation of the encoding table.
+     *
+     * @param node Root of the Huffman tree.
+     * @return Encoding table as a String array indexed by ASCII values.
+     */
+    public static String[] createEncodingTable(HuffmanNode node) {
+        String[] codes = new String[ASCII8];
+        createEncodingTable(node, EMPTY, codes);
+        return codes;
+    }
+
+    /**
+     * Displays the Huffman codes for characters in the message.
+     *
+     * @param codes Encoding table with Huffman codes.
+     */
+    public static void displayCodes(String[] codes) {
+        for (int i = 0; i < codes.length; i++) {
+            if (codes[i] != null) {
+                // Print character and its corresponding Huffman code
+                System.out.printf("\n '%s' --> %-10s", (char) i, codes[i]);
+            }
+        }
+    }
+
+/**
+ * Computes the total length of the compressed message in bits.
+ *
+ * @param message Original message to compress.
+ * @param codes   Encoding table with Huffman codes.
+ * @
